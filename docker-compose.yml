@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: access-control-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_MULTIPLE_DATABASES=access_control_db,ticket_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - access-network
+
+  # Interface Gráfica para o Banco de Dados
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: access-control-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres-db
+    networks:
+      - access-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine # 'management' habilita a interface Web
+    container_name: ticket-rabbitmq
+    ports:
+      - "5672:5672"   # Porta do protocolo AMQP
+      - "15672:15672" # Interface Web do RabbitMQ
+    networks:
+      - access-network
+
+  ticket-service:
+    build:
+      context: ..
+      dockerfile: ticket-service/Dockerfile
+    container_name: ticket-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/ticket_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_FLYWAY_URL=jdbc:postgresql://postgres-db:5432/ticket_db
+      - SPRING_FLYWAY_USER=admin
+      - SPRING_FLYWAY_PASSWORD=admin
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - JWT_SECRET=M2I3YzA5OGU1YmFhN2U3Zjk0ZWY0ZGIyYmU5ZDBjZjkxZWRhYmFmNjA4MGY1ZDIzM2M4ZGM0ZTI5N2I0YmU3YQ==
+      - TZ=America/Manaus
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    networks:
+      - access-network
+
+  access-control-manager:
+    build:
+      context: ..
+      dockerfile: access-control-manager/Dockerfile
+    container_name: access-control-manager
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - DB_NAME=access_control_db
+      - DB_USER=admin
+      - DB_PASSWORD=admin
+      - JWT_SECRET=M2I3YzA5OGU1YmFhN2U3Zjk0ZWY0ZGIyYmU5ZDBjZjkxZWRhYmFmNjA4MGY1ZDIzM2M4ZGM0ZTI5N2I0YmU3YQ==
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - access-network
+
+networks:
+  access-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
