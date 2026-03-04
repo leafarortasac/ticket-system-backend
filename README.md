@@ -19,10 +19,11 @@ Persistência (PostgreSQL): Bancos de dados isolados por serviço, utilizando Mi
 O docker-compose.yml espera que os repositórios sejam clonados em pastas irmãs para o correto funcionamento do contexto de build multi-stage:
 
 Plaintext
- ticket-system-backend/        <-- (Repositório Principal / Você está aqui)
- ├── init-db/                  <-- Scripts de inicialização do PostgreSQL
- ├── docker-compose.yml        <-- Orquestrador Geral
- └── README.md
+
+    ticket-system-backend/        <-- (Repositório Principal / Você está aqui)
+    ├── init-db/                  <-- Scripts de inicialização do PostgreSQL
+    ├── docker-compose.yml        <-- Orquestrador Geral
+    └── README.md
 
  access-control-manager/       <-- Microsserviço de Identidade e Acesso
  ticket-service/               <-- Microsserviço de Gestão de Chamados
