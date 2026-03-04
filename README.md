@@ -24,10 +24,9 @@ Plaintext
     ├── init-db/                  <-- Scripts de inicialização do PostgreSQL
     ├── docker-compose.yml        <-- Orquestrador Geral
     └── README.md
-
- access-control-manager/       <-- Microsserviço de Identidade e Acesso
- ticket-service/               <-- Microsserviço de Gestão de Chamados
- shared-contracts/             <-- Biblioteca Java de Contratos (DTOs/Events)
+    access-control-manager/       <-- Microsserviço de Identidade e Acesso
+    ticket-service/               <-- Microsserviço de Gestão de Chamados
+    shared-contracts/             <-- Biblioteca Java de Contratos (DTOs/Events)
 
 🏗️ Diferenciais de Nível Sênior
 
